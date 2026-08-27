@@ -9,7 +9,6 @@ st.set_page_config(
 st.title("Hotel Amber 85 - Busy Buffet Analysis Dashboard")
 st.caption("Presented by: Apirak Promdee | Data Analyst Assessment")
 
-
 @st.cache_data
 def load_data():
     try:
@@ -37,7 +36,6 @@ def load_data():
     except Exception:
         return None
 
-
 df = load_data()
 
 tab1, tab2, tab3 = st.tabs(
@@ -48,6 +46,15 @@ tab1, tab2, tab3 = st.tabs(
     ]
 )
 
+# กำหนดชุดสีมาตรฐานให้เหมือนกันทุกแท็บ
+color_map_guests = {
+    "In house": "#0070C0", 
+    "Walk in": "#FF8C00",
+    "In-house": "#0070C0", 
+    "Walk-in": "#FF8C00",
+    "In-house (Target)": "#0070C0"
+}
+
 # -----------------------------------------------------------------------------
 # TASK 1
 # -----------------------------------------------------------------------------
@@ -56,11 +63,9 @@ with tab1:
         "Task 1: In-house รอโต๊ะ / Walk-in รอนานจนเดินออก (Partially Supported)"
     )
 
-    # ค่ามาตรฐานตามสไลด์
     val_wait_inhouse, val_wait_walkin = 28.0, 38.4
     val_rate_inhouse, val_rate_walkin = 28.00, 14.58
 
-    # ถ้าคำนวณจากไฟล์ได้จริง จะดึงค่าจากไฟล์มาใช้
     if df is not None and "Guest_type" in df.columns:
         in_h = df[df["Guest_type"].str.lower().str.contains("in", na=False)]
         w_in = df[df["Guest_type"].str.lower().str.contains("walk", na=False)]
@@ -90,12 +95,13 @@ with tab1:
             df_wait,
             x="Guest Type",
             y="Waiting Time",
+            color="Guest Type",
+            color_discrete_map=color_map_guests,
             title="Waiting Time (นาที)",
             text="Waiting Time",
-            color_discrete_sequence=["#0070C0"],
         )
         fig_wait.update_traces(
-            texttemplate="%{text:.1f} นาที", textposition="outside"
+            texttemplate="%{text:.1f} นาที", textposition="outside", showlegend=False
         )
         fig_wait.update_layout(
             yaxis_title="เวลารอเฉลี่ย (นาที)",
@@ -115,12 +121,13 @@ with tab1:
             df_rate,
             x="Guest Type",
             y="Walk-away Rate",
+            color="Guest Type",
+            color_discrete_map=color_map_guests,
             title="Walk-away Rate (%)",
             text="Walk-away Rate",
-            color_discrete_sequence=["#0070C0"],
         )
         fig_rate.update_traces(
-            texttemplate="%{text:.2f}%", textposition="outside"
+            texttemplate="%{text:.2f}%", textposition="outside", showlegend=False
         )
         fig_rate.update_layout(
             yaxis_title="อัตราการเดินออก (%)",
@@ -168,9 +175,6 @@ with tab2:
             height=380,
         )
         st.plotly_chart(fig_dur, use_container_width=True)
-        st.write(
-            "**ข้อสรุป:** ลูกค้าส่วนใหญ่ใช้เวลาทานอาหารไม่ถึง 5 ชั่วโมง (Median 52 นาที)"
-        )
 
     with col_b:
         df_demand = pd.DataFrame(
@@ -197,9 +201,6 @@ with tab2:
             height=380,
         )
         st.plotly_chart(fig_dem, use_container_width=True)
-        st.write(
-            "**ข้อสรุป:** ไม่มีข้อมูลหลังปรับราคา 259 บาท จึงยืนยันผลไม่ได้"
-        )
 
     with col_c:
         df_action3 = pd.DataFrame(
@@ -212,12 +213,13 @@ with tab2:
             df_action3,
             x="Guest Type",
             y="Walk-away Rate",
+            color="Guest Type",
+            color_discrete_map=color_map_guests,
             title="3. Walk-away Rate (%)",
             text="Walk-away Rate",
-            color_discrete_sequence=["#0070C0"],
         )
         fig_act3.update_traces(
-            texttemplate="%{text:.2f}%", textposition="outside"
+            texttemplate="%{text:.2f}%", textposition="outside", showlegend=False
         )
         fig_act3.update_layout(
             xaxis_title="ประเภทลูกค้า",
@@ -226,9 +228,6 @@ with tab2:
             height=380,
         )
         st.plotly_chart(fig_act3, use_container_width=True)
-        st.write(
-            "**ข้อสรุป:** In-house มีอัตราเดินออกสูงกว่า แต่การข้ามคิวไม่เพิ่ม Capacity"
-        )
 
 # -----------------------------------------------------------------------------
 # TASK 3
@@ -249,12 +248,13 @@ with tab3:
             df_kpi_rate,
             x="Guest Type",
             y="Baseline Rate",
+            color="Guest Type",
+            color_discrete_map=color_map_guests,
             title="KPI 1: Target In-house Walk-away Baseline",
             text="Baseline Rate",
-            color_discrete_sequence=["#0070C0"],
         )
         fig_kpi_rate.update_traces(
-            texttemplate="%{text:.2f}%", textposition="outside"
+            texttemplate="%{text:.2f}%", textposition="outside", showlegend=False
         )
         fig_kpi_rate.update_layout(
             yaxis_title="Walk-away Rate (%)",
@@ -274,12 +274,13 @@ with tab3:
             df_kpi_wait,
             x="Guest Type",
             y="Baseline Waiting Time",
+            color="Guest Type",
+            color_discrete_map=color_map_guests,
             title="KPI 2: Target In-house Waiting Time Baseline",
             text="Baseline Waiting Time",
-            color_discrete_sequence=["#0070C0"],
         )
         fig_kpi_wait.update_traces(
-            texttemplate="%{text:.1f} นาที", textposition="outside"
+            texttemplate="%{text:.1f} นาที", textposition="outside", showlegend=False
         )
         fig_kpi_wait.update_layout(
             yaxis_title="เวลารอเฉลี่ย (นาที)",
@@ -287,9 +288,3 @@ with tab3:
             height=400,
         )
         st.plotly_chart(fig_kpi_wait, use_container_width=True)
-
-    st.subheader("สรุปเป้าหมาย Task 3:")
-    st.write(
-        "- **แนวทางดำเนินการ:** ให้สิทธิ์ In-house ข้ามคิวเมื่อมีโต๊ะว่าง โดยไม่ต้องลงทุนเพิ่ม\n"
-        "- **ตัวชี้วัดหลัก (KPI):** ติดตามการลดลงของ In-house Walk-away Rate (ปัจจุบัน 28.00%) และเวลารอเฉลี่ย (ปัจจุบัน 28.0 นาที)"
-    )
