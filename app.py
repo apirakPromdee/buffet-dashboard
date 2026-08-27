@@ -1,7 +1,6 @@
 import pandas as pd
 import streamlit as st
 
-# ตั้งค่าหน้า Dashboard
 st.set_page_config(
     page_title="Busy Buffet Analysis - Data Analyst Test", layout="wide"
 )
@@ -16,18 +15,24 @@ def load_data():
     file_path = "2026 Data Test1 Final - Busy Buffet Dataset.xlsx"
     df = pd.read_excel(file_path)
 
-    # Convert datetime
-    for col in ["queue_start", "queue_end", "meal_start", "meal_end"]:
+    # แปลง time/datetime คอลัมน์ให้เป็น datetime object ที่ถูกต้อง
+    time_cols = ["queue_start", "queue_end", "meal_start", "meal_end"]
+    for col in time_cols:
         if col in df.columns:
-            df[col] = pd.to_datetime(df[col])
+            # แปลงเป็น string ก่อนแล้วค่อยแปลงเป็น datetime
+            df[col] = pd.to_datetime(
+                df[col].astype(str), format="%H:%M:%S", errors="coerce"
+            )
 
-    # Feature Engineering
+    # คำนวณ waiting_time และ meal_duration (นาที)
     df["waiting_time"] = (
         df["queue_end"] - df["queue_start"]
     ).dt.total_seconds() / 60.0
     df["meal_duration"] = (
         df["meal_end"] - df["meal_start"]
     ).dt.total_seconds() / 60.0
+
+    # สร้าง Flag สำหรับ Walk-away
     df["is_walkaway"] = df["queue_start"].notna() & df["meal_start"].isna()
 
     return df
@@ -58,7 +63,6 @@ with tab1:
 
     with col1:
         st.subheader("1. Waiting Time & Walk-away Rate")
-        # Summary metrics
         in_house_df = df[df["Guest_type"] == "In house"]
         walk_in_df = df[df["Guest_type"] == "Walk in"]
 
