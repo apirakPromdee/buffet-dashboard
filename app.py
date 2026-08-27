@@ -1,6 +1,6 @@
-import streamlit as st
-import pandas as pd
-
+git add app.py
+git commit -m "Update chart title and labels"
+git push origin main
 
 # ============================================================
 # PAGE CONFIG
