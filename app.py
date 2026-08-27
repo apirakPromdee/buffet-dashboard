@@ -3,11 +3,11 @@ import plotly.express as px
 import streamlit as st
 
 st.set_page_config(
-    page_title="Busy Buffet Analysis - Data Analyst Test", layout="wide"
+    page_title=" Buffet Test", layout="wide"
 )
 
-st.title("Hotel Amber 85 - Busy Buffet Analysis Dashboard")
-st.caption("Presented by: Apirak Promdee | Data Analyst Assessment")
+st.title("Buffet Dashboard")
+st.caption("Presented by: Apirak Promdee Test")
 
 @st.cache_data
 def load_data():
