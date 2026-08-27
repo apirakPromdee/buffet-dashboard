@@ -3,11 +3,12 @@ import plotly.express as px
 import streamlit as st
 
 st.set_page_config(
-    page_title=" Buffet Test", layout="wide"
+    page_title="Busy Buffet Analysis - Data Analyst Test", layout="wide"
 )
 
-st.title("Buffet Dashboard")
-st.caption("Presented by: Apirak Promdee Test")
+st.title("Hotel Amber 85 - Busy Buffet Analysis Dashboard")
+st.caption("Presented by: Apirak Promdee | Data Analyst Assessment")
+
 
 @st.cache_data
 def load_data():
@@ -36,6 +37,7 @@ def load_data():
     except Exception:
         return None
 
+
 df = load_data()
 
 tab1, tab2, tab3 = st.tabs(
@@ -46,13 +48,12 @@ tab1, tab2, tab3 = st.tabs(
     ]
 )
 
-# กำหนดชุดสีมาตรฐานให้เหมือนกันทุกแท็บ
 color_map_guests = {
-    "In house": "#0070C0", 
+    "In house": "#0070C0",
     "Walk in": "#FF8C00",
-    "In-house": "#0070C0", 
+    "In-house": "#0070C0",
     "Walk-in": "#FF8C00",
-    "In-house (Target)": "#0070C0"
+    "In-house (Target)": "#0070C0",
 }
 
 # -----------------------------------------------------------------------------
@@ -101,11 +102,15 @@ with tab1:
             text="Waiting Time",
         )
         fig_wait.update_traces(
-            texttemplate="%{text:.1f} นาที", textposition="outside", showlegend=False
+            texttemplate="%{text:.1f} นาที",
+            textposition="outside",
+            showlegend=False,
         )
         fig_wait.update_layout(
             yaxis_title="เวลารอเฉลี่ย (นาที)",
-            yaxis=dict(range=[0, max(val_wait_inhouse, val_wait_walkin) * 1.35]),
+            yaxis=dict(
+                range=[0, max(val_wait_inhouse, val_wait_walkin) * 1.35]
+            ),
             height=400,
         )
         st.plotly_chart(fig_wait, use_container_width=True)
@@ -127,11 +132,15 @@ with tab1:
             text="Walk-away Rate",
         )
         fig_rate.update_traces(
-            texttemplate="%{text:.2f}%", textposition="outside", showlegend=False
+            texttemplate="%{text:.2f}%",
+            textposition="outside",
+            showlegend=False,
         )
         fig_rate.update_layout(
             yaxis_title="อัตราการเดินออก (%)",
-            yaxis=dict(range=[0, max(val_rate_inhouse, val_rate_walkin) * 1.35]),
+            yaxis=dict(
+                range=[0, max(val_rate_inhouse, val_rate_walkin) * 1.35]
+            ),
             height=400,
         )
         st.plotly_chart(fig_rate, use_container_width=True)
@@ -146,7 +155,7 @@ with tab1:
 # TASK 2
 # -----------------------------------------------------------------------------
 with tab2:
-    st.header("Task 2: การวิเคราะห์ 3 แนวทางแก้ไขปัญหา")
+    st.header("Task 2: การวิเคราะห์ 3 แนวทางแก้ไขปัญหา (Disprove Actions)")
 
     col_a, col_b, col_c = st.columns(3)
 
@@ -172,9 +181,12 @@ with tab2:
             xaxis_title="ตัววัดระยะเวลานั่ง",
             yaxis_title="เวลา (นาที)",
             yaxis=dict(range=[0, 360]),
-            height=380,
+            height=360,
         )
         st.plotly_chart(fig_dur, use_container_width=True)
+        st.write(
+            "**ข้อสรุป Action 1:** ไม่สนับสนุนการจำกัดเวลา 1.5 ชม. เพราะ Median อยู่ที่เพียง 52 นาที การจำกัดเวลาจึงไม่ช่วยเพิ่ม Capacity อย่างมีนัยสำคัญ"
+        )
 
     with col_b:
         df_demand = pd.DataFrame(
@@ -198,9 +210,12 @@ with tab2:
             xaxis_title="ระดับ Demand ปัจจุบัน",
             yaxis_title="จำนวนลูกค้า (คน/วัน)",
             yaxis=dict(range=[0, 200]),
-            height=380,
+            height=360,
         )
         st.plotly_chart(fig_dem, use_container_width=True)
+        st.write(
+            "**ข้อสรุป Action 2:** ยืนยันผลไม่ได้ เนื่องจากขาดข้อมูล Demand และพฤติกรรมลูกค้าหลังการปรับราคาเป็น 259 บาท"
+        )
 
     with col_c:
         df_action3 = pd.DataFrame(
@@ -219,15 +234,20 @@ with tab2:
             text="Walk-away Rate",
         )
         fig_act3.update_traces(
-            texttemplate="%{text:.2f}%", textposition="outside", showlegend=False
+            texttemplate="%{text:.2f}%",
+            textposition="outside",
+            showlegend=False,
         )
         fig_act3.update_layout(
             xaxis_title="ประเภทลูกค้า",
             yaxis_title="อัตราการเดินออก (%)",
             yaxis=dict(range=[0, 35]),
-            height=380,
+            height=360,
         )
         st.plotly_chart(fig_act3, use_container_width=True)
+        st.write(
+            "**ข้อสรุป Action 3:** การข้ามคิวไม่เพิ่ม Capacity แต่เหมาะสมสำหรับใช้ลด In-house Walk-away Rate ที่สูงถึง 28.00%"
+        )
 
 # -----------------------------------------------------------------------------
 # TASK 3
@@ -254,12 +274,14 @@ with tab3:
             text="Baseline Rate",
         )
         fig_kpi_rate.update_traces(
-            texttemplate="%{text:.2f}%", textposition="outside", showlegend=False
+            texttemplate="%{text:.2f}%",
+            textposition="outside",
+            showlegend=False,
         )
         fig_kpi_rate.update_layout(
             yaxis_title="Walk-away Rate (%)",
             yaxis=dict(range=[0, 35]),
-            height=400,
+            height=380,
         )
         st.plotly_chart(fig_kpi_rate, use_container_width=True)
 
@@ -280,11 +302,20 @@ with tab3:
             text="Baseline Waiting Time",
         )
         fig_kpi_wait.update_traces(
-            texttemplate="%{text:.1f} นาที", textposition="outside", showlegend=False
+            texttemplate="%{text:.1f} นาที",
+            textposition="outside",
+            showlegend=False,
         )
         fig_kpi_wait.update_layout(
             yaxis_title="เวลารอเฉลี่ย (นาที)",
             yaxis=dict(range=[0, 50]),
-            height=400,
+            height=380,
         )
         st.plotly_chart(fig_kpi_wait, use_container_width=True)
+
+    st.subheader("สรุปข้อเสนอแนะและตัวชี้วัด (Action Strategy & KPIs):")
+    st.write(
+        "- **ข้อเสนอแนะ (Recommendation):** ให้สิทธิ์ In-house Guests ข้ามคิวเมื่อมีโต๊ะว่าง เนื่องจากไม่มีต้นทุนเพิ่มและช่วยรักษาพึงพอใจลูกค้าโรงแรม\n"
+        "- **KPI 1 (Walk-away Rate):** ติดตามการลดลงของ In-house Walk-away Rate จากระดับ Baseline ปัจจุบันที่ 28.00%\n"
+        "- **KPI 2 (Waiting Time):** ติดตามการลดลงของเวลารอเฉลี่ยของลูกค้า In-house จากระดับ Baseline ปัจจุบันที่ 28.0 นาที"
+    )
