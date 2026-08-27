@@ -5,7 +5,7 @@ st.set_page_config(
     page_title="Busy Buffet Analysis - Data Analyst Test", layout="wide"
 )
 
-st.title("Buffet Analysis Dashboard")
+st.title("Buffet Dashboard")
 
 
 # โหลดข้อมูล
