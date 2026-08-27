@@ -55,46 +55,47 @@ with tab1:
         "Task 1: In-house รอโต๊ะ / Walk-in รอนานจนเดินออก (Partially Supported)"
     )
 
-    col1, col2 = st.columns([1.2, 1])
+    in_house_df = df[df["Guest_type"] == "In house"]
+    walk_in_df = df[df["Guest_type"] == "Walk in"]
+
+    avg_wait_inhouse = in_house_df["waiting_time"].mean()
+    avg_wait_walkin = walk_in_df["waiting_time"].mean()
+
+    walkaway_inhouse = (
+        in_house_df["is_walkaway"].sum()
+        / in_house_df["queue_start"].notna().sum()
+    ) * 100
+    walkaway_walkin = (
+        walk_in_df["is_walkaway"].sum()
+        / walk_in_df["queue_start"].notna().sum()
+    ) * 100
+
+    col1, col2 = st.columns(2)
 
     with col1:
-        in_house_df = df[df["Guest_type"] == "In house"]
-        walk_in_df = df[df["Guest_type"] == "Walk in"]
-
-        avg_wait_inhouse = in_house_df["waiting_time"].mean()
-        avg_wait_walkin = walk_in_df["waiting_time"].mean()
-
-        walkaway_inhouse = (
-            in_house_df["is_walkaway"].sum()
-            / in_house_df["queue_start"].notna().sum()
-        ) * 100
-        walkaway_walkin = (
-            walk_in_df["is_walkaway"].sum()
-            / walk_in_df["queue_start"].notna().sum()
-        ) * 100
-
-        # Chart 1: Waiting Time Bar Chart
+        # Chart 1: Waiting Time
         df_wait = pd.DataFrame(
             {
                 "Guest Type": ["In house", "Walk in"],
-                "Waiting Time (min)": [avg_wait_inhouse, avg_wait_walkin],
+                "Average Waiting Time (min)": [avg_wait_inhouse, avg_wait_walkin],
             }
         )
         fig_wait = px.bar(
             df_wait,
             x="Guest Type",
-            y="Waiting Time (min)",
-            title="WAITING TIME",
-            text_auto=".1f",
+            y="Average Waiting Time (min)",
+            title="Waiting Time (นาที)",
+            text="Average Waiting Time (min)",
             color_discrete_sequence=["#0070C0"],
         )
-        fig_wait.update_layout(
-            height=250, margin=dict(l=20, r=20, t=40, b=20), showlegend=False
+        fig_wait.update_traces(
+            texttemplate="%{text:.1f} นาที", textposition="outside"
         )
+        fig_wait.update_layout(yaxis_title="เวลารอเฉลี่ย (นาที)", height=400)
         st.plotly_chart(fig_wait, use_container_width=True)
-        st.caption(f"Walk-in Waiting Time: **{avg_wait_walkin:.1f} min**")
 
-        # Chart 2: Walk-away Rate Bar Chart
+    with col2:
+        # Chart 2: Walk-away Rate
         df_rate = pd.DataFrame(
             {
                 "Guest Type": ["In house", "Walk in"],
@@ -105,118 +106,175 @@ with tab1:
             df_rate,
             x="Guest Type",
             y="Walk-away Rate (%)",
-            title="WALK-AWAY RATE",
-            text_auto=".2f",
+            title="Walk-away Rate (%)",
+            text="Walk-away Rate (%)",
             color_discrete_sequence=["#0070C0"],
         )
-        fig_rate.update_layout(
-            height=250, margin=dict(l=20, r=20, t=40, b=20), showlegend=False
+        fig_rate.update_traces(
+            texttemplate="%{text:.2f}%", textposition="outside"
         )
+        fig_rate.update_layout(yaxis_title="อัตราการเดินออก (%)", height=400)
         st.plotly_chart(fig_rate, use_container_width=True)
-        st.caption(f"In-house Walk-away Rate: **{walkaway_inhouse:.2f}%**")
 
-    with col2:
-        st.subheader(
-            "ลูกค้าไม่พอใจเรื่องเวลารอคิวและเดินออกจากร้าน"
-        )
-        st.write(
-            f"""
-        **ผลการวิเคราะห์: Partially Supported (จริงเพียงบางส่วน)**
-        
-        * **ลูกค้า In-house มี Walk-away Rate สูงถึง 28.00%** สูงกว่ากลุ่ม Walk-in (14.58%) เกือบ 2 เท่า
-        * แม้กลุ่ม **Walk-in จะมีเวลารอคิวเฉลี่ยสูงกว่า** (38.4 นาที vs In-house 28.0 นาที)
-        * แต่กลุ่ม In-house กลับยกเลิกคิวมากกว่า สะท้อนว่าลูกค้าที่พักในโรงแรมไวต่อเวลารอคิวอย่างมีนัยสำคัญ
-        """
-        )
+    st.subheader("สรุปผลการวิเคราะห์:")
+    st.write(
+        "- **In-house Walk-away Rate สูงถึง 28.00%** (เทียบกับ Walk-in 14.58%)\n"
+        "- **Walk-in Waiting Time อยู่ที่ 38.4 นาที** (เทียบกับ In-house 28.0 นาที)"
+    )
 
 # -----------------------------------------------------------------------------
 # TASK 2
 # -----------------------------------------------------------------------------
 with tab2:
-    st.header("Task 2: การวิเคราะห์ 3 แนวทางของโรงแรม")
+    st.header("Task 2: การวิเคราะห์ 3 แนวทางแก้ไขปัญหา")
 
-    m1, m2, m3 = st.columns(3)
-    with m1:
-        st.metric(
-            "1. ลดเวลานั่ง (5 ชม.)",
-            "Median = 52 นาที",
-            "Avg = 61 นาที | Max = 321 นาที",
-        )
-    with m2:
-        st.metric(
-            "2. เพิ่มราคา 259 บาท",
-            "Avg Demand = 132.4 pax/day",
-            "Demand อยู่ที่ 102-166 pax/day",
-        )
-    with m3:
-        st.metric(
-            "3. In-house ข้ามคิว",
-            "Walk-away 28.00%",
-            "Avg Wait 28.0 min",
-        )
+    col_a, col_b, col_c = st.columns(3)
 
-    st.markdown("---")
-
-    col_a, col_b = st.columns(2)
     with col_a:
-        st.subheader("1. ลดเวลานั่ง?")
-        st.write(
-            """
-        * **5 ชั่วโมงเป็นข้อจำกัดจริงหรือไม่?**
-        * Average Meal Duration = **61 นาที** | Median = **52 นาที**
-        * **สรุป:** ลูกค้าส่วนใหญ่ใช้เวลาไม่ถึง 5 ชั่วโมง การลดเวลานั่งอาจช่วยได้จำกัด
-        """
+        # Chart Task 2.1: Meal Duration Stats
+        df_duration = pd.DataFrame(
+            {
+                "Metric": ["Median", "Average", "Maximum"],
+                "Duration (min)": [52, 61, 321],
+            }
         )
-
-        st.subheader("2. เพิ่มราคา 259 บาท?")
+        fig_dur = px.bar(
+            df_duration,
+            x="Metric",
+            y="Duration (min)",
+            title="1. Meal Duration (นาที)",
+            text="Duration (min)",
+            color_discrete_sequence=["#0070C0"],
+        )
+        fig_dur.update_traces(
+            texttemplate="%{text} นาที", textposition="outside"
+        )
+        fig_dur.update_layout(
+            xaxis_title="ตัววัดระยะเวลานั่ง",
+            yaxis_title="เวลา (นาที)",
+            height=380,
+        )
+        st.plotly_chart(fig_dur, use_container_width=True)
         st.write(
-            """
-        * **ราคาที่สูงขึ้นจะลด Demand ได้จริงหรือไม่?**
-        * Average Demand = **132.4 pax/day**
-        * **สรุป:** ไม่มีข้อมูลหลังขึ้นราคา ยืนยันไม่ได้ว่าการขึ้นราคา 259 บาทจะลด Demand ได้มากพอที่จะลด Queue
-        """
+            "**ข้อสรุป:** ลูกค้าส่วนใหญ่ใช้เวลาทานอาหารไม่ถึง 5 ชั่วโมง (Median 52 นาที)"
         )
 
     with col_b:
-        st.subheader("3. In-house ข้ามคิว?")
+        # Chart Task 2.2: Daily Demand Range
+        df_demand = pd.DataFrame(
+            {
+                "Metric": ["Min Demand", "Average Demand", "Max Demand"],
+                "Pax / Day": [102, 132.4, 166],
+            }
+        )
+        fig_dem = px.bar(
+            df_demand,
+            x="Metric",
+            y="Pax / Day",
+            title="2. Daily Demand (คน/วัน)",
+            text="Pax / Day",
+            color_discrete_sequence=["#0070C0"],
+        )
+        fig_dem.update_traces(
+            texttemplate="%{text:.1f}", textposition="outside"
+        )
+        fig_dem.update_layout(
+            xaxis_title="ระดับ Demand ปัจจุบัน",
+            yaxis_title="จำนวนลูกค้า (คน/วัน)",
+            height=380,
+        )
+        st.plotly_chart(fig_dem, use_container_width=True)
         st.write(
-            """
-        * **ช่วยลดปัญหาของ In-house ได้หรือไม่?**
-        * In-house มี Walk-away Rate สูงกว่า (28.00% vs 14.58%)
-        * **สรุป:** สะท้อนว่าเป็นกลุ่มที่ได้รับผลกระทบจากการรอ แต่การข้ามคิวไม่ได้เพิ่มจำนวนโต๊ะหรือ Capacity ของร้าน
-        """
+            "**ข้อสรุป:** ไม่มีข้อมูลหลังปรับราคา 259 บาท จึงยืนยันผลไม่ได้"
         )
 
-        st.info(
-            "**สรุปการวิเคราะห์ 3 แนวทาง:** ทั้ง 3 แนวทางสามารถช่วยแก้ปัญหาได้บางส่วน แต่ยังไม่มีแนวทางใดที่สามารถแก้ปัญหาได้อย่างสมบูรณ์"
+    with col_c:
+        # Chart Task 2.3: In-house vs Walk-in Walk-away Comparison
+        df_action3 = pd.DataFrame(
+            {
+                "Guest Type": ["In-house", "Walk-in"],
+                "Walk-away Rate (%)": [28.00, 14.58],
+            }
+        )
+        fig_act3 = px.bar(
+            df_action3,
+            x="Guest Type",
+            y="Walk-away Rate (%)",
+            title="3. Walk-away Rate (%)",
+            text="Walk-away Rate (%)",
+            color_discrete_sequence=["#0070C0"],
+        )
+        fig_act3.update_traces(
+            texttemplate="%{text:.2f}%", textposition="outside"
+        )
+        fig_act3.update_layout(
+            xaxis_title="ประเภทลูกค้า",
+            yaxis_title="อัตราการเดินออก (%)",
+            height=380,
+        )
+        st.plotly_chart(fig_act3, use_container_width=True)
+        st.write(
+            "**ข้อสรุป:** In-house มีอัตราเดินออกสูงกว่า แต่การข้ามคิวไม่เพิ่ม Capacity"
         )
 
 # -----------------------------------------------------------------------------
 # TASK 3
 # -----------------------------------------------------------------------------
 with tab3:
-    st.header("Task 3: ข้อเสนอแนะ Queue Skipping for In-house Guests")
+    st.header("Task 3: KPI ติดตามผล Queue Skipping for In-house Guests")
 
     col_t3_1, col_t3_2 = st.columns(2)
 
     with col_t3_1:
-        st.subheader("ทำไมเลือกแนวทางนี้?")
-        st.write(
-            """
-        * **In-house Walk-away Rate = 28.00%** (สูงกว่า Walk-in ที่ 14.58%)
-        * **เหตุผลสำคัญ:** มองว่า In-house มีอัตรา Walk-away สูงกว่าเกือบ 2 เท่า จึงควรให้ความสำคัญกับกลุ่มนี้เป็นอันดับแรก
-        * เป็นแนวทางที่สามารถทดลองใช้ได้ทันที **โดยไม่ต้องลงทุนเพิ่มในโต๊ะหรืออุปกรณ์**
-        """
+        # Chart Target KPI 1: Walk-away Rate Baseline
+        df_kpi_rate = pd.DataFrame(
+            {
+                "Guest Type": ["In-house (Target Group)", "Walk-in"],
+                "Baseline Rate (%)": [28.00, 14.58],
+            }
         )
+        fig_kpi_rate = px.bar(
+            df_kpi_rate,
+            x="Guest Type",
+            y="Baseline Rate (%)",
+            title="KPI 1: Target In-house Walk-away Baseline",
+            text="Baseline Rate (%)",
+            color_discrete_sequence=["#0070C0"],
+        )
+        fig_kpi_rate.update_traces(
+            texttemplate="%{text:.2f}%", textposition="outside"
+        )
+        fig_kpi_rate.update_layout(
+            yaxis_title="Walk-away Rate (%)", height=400
+        )
+        st.plotly_chart(fig_kpi_rate, use_container_width=True)
 
     with col_t3_2:
-        st.subheader("คาดหวังผลอะไร และวัดผลอย่างไร")
-        st.write(
-            """
-        * **ผลลัพธ์ที่คาดหวัง:** ลด In-house Walk-away และ ลดเวลารอของ In-house
-        * **KPI ที่ใช้ติดตาม:**
-          * In-house Walk-away (ค่าปัจจุบัน **28.00%**)
-          * In-house รอเฉลี่ย (ค่าปัจจุบัน **28.0 นาที**)
-        * **เป้าหมายหลัก:** ลด In-house Walk-away โดยไม่กระทบ Walk-in มากเกินไป
-        """
+        # Chart Target KPI 2: Waiting Time Baseline
+        df_kpi_wait = pd.DataFrame(
+            {
+                "Guest Type": ["In-house (Target Group)", "Walk-in"],
+                "Baseline Waiting Time (min)": [28.0, 38.4],
+            }
         )
+        fig_kpi_wait = px.bar(
+            df_kpi_wait,
+            x="Guest Type",
+            y="Baseline Waiting Time (min)",
+            title="KPI 2: Target In-house Waiting Time Baseline",
+            text="Baseline Waiting Time (min)",
+            color_discrete_sequence=["#0070C0"],
+        )
+        fig_kpi_wait.update_traces(
+            texttemplate="%{text:.1f} นาที", textposition="outside"
+        )
+        fig_kpi_wait.update_layout(
+            yaxis_title="เวลารอเฉลี่ย (นาที)", height=400
+        )
+        st.plotly_chart(fig_kpi_wait, use_container_width=True)
+
+    st.subheader("สรุปเป้าหมาย Task 3:")
+    st.write(
+        "- **แนวทางดำเนินการ:** ให้สิทธิ์ In-house ข้ามคิวเมื่อมีโต๊ะว่าง โดยไม่ต้องลงทุนเพิ่ม\n"
+        "- **ตัวชี้วัดหลัก (KPI):** ติดตามการลดลงของ In-house Walk-away Rate (ปัจจุบัน 28.00%) และเวลารอเฉลี่ย (ปัจจุบัน 28.0 นาที)"
+    )
