@@ -29,7 +29,6 @@ def load_and_process_data():
                 continue
 
         if not data_list:
-            # Fallback หาก sheet_name ไม่ตรง ให้ลองอ่านแผ่นแรก
             df = pd.read_excel(file_path)
         else:
             df = pd.concat(data_list, ignore_index=True)
@@ -193,7 +192,6 @@ with tab1:
 with tab2:
     st.header("Task 2: การวิเคราะห์ 3 แนวทางแก้ไขปัญหา (Disprove Actions)")
 
-    # คำนวณ Meal Duration สดจาก Dataset (ถ้ามีข้อมูล)
     med_dur, avg_dur, max_dur = 52.0, 61.0, 321.0
     if df is not None and "meal_duration" in df.columns:
         m_valid = df["meal_duration"].dropna()
@@ -202,7 +200,6 @@ with tab2:
             avg_dur = float(m_valid.mean())
             max_dur = float(m_valid.max())
 
-    # คำนวณ Daily Demand สดจาก Dataset
     min_dem, avg_dem, max_dem = 102.0, 132.4, 166.0
     if df is not None and "pax" in df.columns and "date" in df.columns:
         daily_pax = df.groupby("date")["pax"].sum()
@@ -357,7 +354,7 @@ with tab3:
             color="Guest Type",
             color_discrete_map=color_map_guests,
             title="KPI 2: Target In-house Waiting Time Baseline",
-            text="Baseline Baseline Waiting Time",
+            text="Baseline Waiting Time",  # แก้ไขจุดที่พิมพ์ผิดเรียบร้อยแล้ว
         )
         fig_kpi_wait.update_traces(
             texttemplate="%{text:.1f} นาที",
