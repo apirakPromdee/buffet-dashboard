@@ -5,8 +5,7 @@ st.set_page_config(
     page_title="Busy Buffet Analysis - Data Analyst Test", layout="wide"
 )
 
-st.title("Hotel Amber 85 - Busy Buffet Analysis Dashboard")
-st.caption("Data Analyst Assessment | Deployed via Streamlit")
+st.title("Buffet Analysis Dashboard")
 
 
 # โหลดข้อมูล
