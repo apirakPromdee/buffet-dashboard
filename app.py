@@ -1,6 +1,6 @@
-git add app.py
-git commit -m "Update chart title and labels"
-git push origin main
+import streamlit as st
+import plotly.express as px
+import pandas as pd
 
 # ============================================================
 # PAGE CONFIG
