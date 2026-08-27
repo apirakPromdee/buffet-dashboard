@@ -12,35 +12,33 @@ st.caption("Presented by: Apirak Promdee | Data Analyst Assessment")
 
 @st.cache_data
 def load_data():
-    file_path = "2026 Data Test1 Final - Busy Buffet Dataset.xlsx"
-    df = pd.read_excel(file_path)
+    try:
+        file_path = "2026 Data Test1 Final - Busy Buffet Dataset.xlsx"
+        df = pd.read_excel(file_path)
 
-    # ตัดช่องว่างส่วนเกินของข้อความในคอลัมน์ Guest_type (ถ้ามี)
-    if "Guest_type" in df.columns:
-        df["Guest_type"] = df["Guest_type"].astype(str).str.strip()
+        if "Guest_type" in df.columns:
+            df["Guest_type"] = df["Guest_type"].astype(str).str.strip()
 
-    time_cols = ["queue_start", "queue_end", "meal_start", "meal_end"]
-    for col in time_cols:
-        if col in df.columns:
-            df[col] = pd.to_datetime(
-                df[col].astype(str), format="%H:%M:%S", errors="coerce"
-            )
+        time_cols = ["queue_start", "queue_end", "meal_start", "meal_end"]
+        for col in time_cols:
+            if col in df.columns:
+                df[col] = pd.to_datetime(
+                    df[col].astype(str), format="%H:%M:%S", errors="coerce"
+                )
 
-    df["waiting_time"] = (
-        df["queue_end"] - df["queue_start"]
-    ).dt.total_seconds() / 60.0
-    df["meal_duration"] = (
-        df["meal_end"] - df["meal_start"]
-    ).dt.total_seconds() / 60.0
-    df["is_walkaway"] = df["queue_start"].notna() & df["meal_start"].isna()
+        df["waiting_time"] = (
+            df["queue_end"] - df["queue_start"]
+        ).dt.total_seconds() / 60.0
+        df["meal_duration"] = (
+            df["meal_end"] - df["meal_start"]
+        ).dt.total_seconds() / 60.0
+        df["is_walkaway"] = df["queue_start"].notna() & df["meal_start"].isna()
+        return df
+    except Exception:
+        return None
 
-    return df
 
-
-try:
-    df = load_data()
-except Exception:
-    df = None
+df = load_data()
 
 tab1, tab2, tab3 = st.tabs(
     [
@@ -58,42 +56,42 @@ with tab1:
         "Task 1: In-house รอโต๊ะ / Walk-in รอนานจนเดินออก (Partially Supported)"
     )
 
-    # คำนวณค่าจริง หากคำนวณไม่ได้ให้ใช้ค่าตาม Slide ผลวิเคราะห์
-    avg_wait_inhouse, avg_wait_walkin = 28.0, 38.4
-    walkaway_inhouse, walkaway_walkin = 28.00, 14.58
+    # ค่ามาตรฐานตามสไลด์
+    val_wait_inhouse, val_wait_walkin = 28.0, 38.4
+    val_rate_inhouse, val_rate_walkin = 28.00, 14.58
 
+    # ถ้าคำนวณจากไฟล์ได้จริง จะดึงค่าจากไฟล์มาใช้
     if df is not None and "Guest_type" in df.columns:
-        in_house_df = df[df["Guest_type"].str.lower().isin(["in house", "in-house"])]
-        walk_in_df = df[df["Guest_type"].str.lower().isin(["walk in", "walk-in"])]
+        in_h = df[df["Guest_type"].str.lower().str.contains("in", na=False)]
+        w_in = df[df["Guest_type"].str.lower().str.contains("walk", na=False)]
 
-        if not in_house_df.empty and not walk_in_df.empty:
-            avg_wait_inhouse = in_house_df["waiting_time"].mean()
-            avg_wait_walkin = walk_in_df["waiting_time"].mean()
-            
-            in_q_count = in_house_df["queue_start"].notna().sum()
-            walk_q_count = walk_in_df["queue_start"].notna().sum()
-            
-            if in_q_count > 0:
-                walkaway_inhouse = (in_house_df["is_walkaway"].sum() / in_q_count) * 100
-            if walk_q_count > 0:
-                walkaway_walkin = (walk_in_df["is_walkaway"].sum() / walk_q_count) * 100
+        if not in_h.empty and not w_in.empty:
+            w1 = in_h["waiting_time"].mean()
+            w2 = w_in["waiting_time"].mean()
+            if pd.notna(w1) and pd.notna(w2):
+                val_wait_inhouse, val_wait_walkin = float(w1), float(w2)
+
+            q1 = in_h["queue_start"].notna().sum()
+            q2 = w_in["queue_start"].notna().sum()
+            if q1 > 0 and q2 > 0:
+                val_rate_inhouse = float((in_h["is_walkaway"].sum() / q1) * 100)
+                val_rate_walkin = float((w_in["is_walkaway"].sum() / q2) * 100)
 
     col1, col2 = st.columns(2)
 
     with col1:
-        # Chart 1: Waiting Time
         df_wait = pd.DataFrame(
             {
                 "Guest Type": ["In house", "Walk in"],
-                "Average Waiting Time (min)": [avg_wait_inhouse, avg_wait_walkin],
+                "Waiting Time": [val_wait_inhouse, val_wait_walkin],
             }
         )
         fig_wait = px.bar(
             df_wait,
             x="Guest Type",
-            y="Average Waiting Time (min)",
+            y="Waiting Time",
             title="Waiting Time (นาที)",
-            text="Average Waiting Time (min)",
+            text="Waiting Time",
             color_discrete_sequence=["#0070C0"],
         )
         fig_wait.update_traces(
@@ -101,25 +99,24 @@ with tab1:
         )
         fig_wait.update_layout(
             yaxis_title="เวลารอเฉลี่ย (นาที)",
-            yaxis=dict(range=[0, max(avg_wait_inhouse, avg_wait_walkin) * 1.3]),
+            yaxis=dict(range=[0, max(val_wait_inhouse, val_wait_walkin) * 1.35]),
             height=400,
         )
         st.plotly_chart(fig_wait, use_container_width=True)
 
     with col2:
-        # Chart 2: Walk-away Rate
         df_rate = pd.DataFrame(
             {
                 "Guest Type": ["In house", "Walk in"],
-                "Walk-away Rate (%)": [walkaway_inhouse, walkaway_walkin],
+                "Walk-away Rate": [val_rate_inhouse, val_rate_walkin],
             }
         )
         fig_rate = px.bar(
             df_rate,
             x="Guest Type",
-            y="Walk-away Rate (%)",
+            y="Walk-away Rate",
             title="Walk-away Rate (%)",
-            text="Walk-away Rate (%)",
+            text="Walk-away Rate",
             color_discrete_sequence=["#0070C0"],
         )
         fig_rate.update_traces(
@@ -127,15 +124,15 @@ with tab1:
         )
         fig_rate.update_layout(
             yaxis_title="อัตราการเดินออก (%)",
-            yaxis=dict(range=[0, max(walkaway_inhouse, walkaway_walkin) * 1.3]),
+            yaxis=dict(range=[0, max(val_rate_inhouse, val_rate_walkin) * 1.35]),
             height=400,
         )
         st.plotly_chart(fig_rate, use_container_width=True)
 
     st.subheader("สรุปผลการวิเคราะห์:")
     st.write(
-        f"- **In-house Walk-away Rate สูงถึง {walkaway_inhouse:.2f}%** (เทียบกับ Walk-in {walkaway_walkin:.2f}%)\n"
-        f"- **Walk-in Waiting Time อยู่ที่ {avg_wait_walkin:.1f} นาที** (เทียบกับ In-house {avg_wait_inhouse:.1f} นาที)"
+        f"- **In-house Walk-away Rate สูงถึง {val_rate_inhouse:.2f}%** (เทียบกับ Walk-in {val_rate_walkin:.2f}%)\n"
+        f"- **Walk-in Waiting Time อยู่ที่ {val_wait_walkin:.1f} นาที** (เทียบกับ In-house {val_wait_inhouse:.1f} นาที)"
     )
 
 # -----------------------------------------------------------------------------
@@ -150,19 +147,19 @@ with tab2:
         df_duration = pd.DataFrame(
             {
                 "Metric": ["Median", "Average", "Maximum"],
-                "Duration (min)": [52, 61, 321],
+                "Duration": [52.0, 61.0, 321.0],
             }
         )
         fig_dur = px.bar(
             df_duration,
             x="Metric",
-            y="Duration (min)",
+            y="Duration",
             title="1. Meal Duration (นาที)",
-            text="Duration (min)",
+            text="Duration",
             color_discrete_sequence=["#0070C0"],
         )
         fig_dur.update_traces(
-            texttemplate="%{text} นาที", textposition="outside"
+            texttemplate="%{text:.0f} นาที", textposition="outside"
         )
         fig_dur.update_layout(
             xaxis_title="ตัววัดระยะเวลานั่ง",
@@ -179,7 +176,7 @@ with tab2:
         df_demand = pd.DataFrame(
             {
                 "Metric": ["Min Demand", "Average Demand", "Max Demand"],
-                "Pax / Day": [102, 132.4, 166],
+                "Pax / Day": [102.0, 132.4, 166.0],
             }
         )
         fig_dem = px.bar(
@@ -208,15 +205,15 @@ with tab2:
         df_action3 = pd.DataFrame(
             {
                 "Guest Type": ["In-house", "Walk-in"],
-                "Walk-away Rate (%)": [28.00, 14.58],
+                "Walk-away Rate": [28.00, 14.58],
             }
         )
         fig_act3 = px.bar(
             df_action3,
             x="Guest Type",
-            y="Walk-away Rate (%)",
+            y="Walk-away Rate",
             title="3. Walk-away Rate (%)",
-            text="Walk-away Rate (%)",
+            text="Walk-away Rate",
             color_discrete_sequence=["#0070C0"],
         )
         fig_act3.update_traces(
@@ -245,15 +242,15 @@ with tab3:
         df_kpi_rate = pd.DataFrame(
             {
                 "Guest Type": ["In-house (Target)", "Walk-in"],
-                "Baseline Rate (%)": [28.00, 14.58],
+                "Baseline Rate": [28.00, 14.58],
             }
         )
         fig_kpi_rate = px.bar(
             df_kpi_rate,
             x="Guest Type",
-            y="Baseline Rate (%)",
+            y="Baseline Rate",
             title="KPI 1: Target In-house Walk-away Baseline",
-            text="Baseline Rate (%)",
+            text="Baseline Rate",
             color_discrete_sequence=["#0070C0"],
         )
         fig_kpi_rate.update_traces(
@@ -270,15 +267,15 @@ with tab3:
         df_kpi_wait = pd.DataFrame(
             {
                 "Guest Type": ["In-house (Target)", "Walk-in"],
-                "Baseline Waiting Time (min)": [28.0, 38.4],
+                "Baseline Waiting Time": [28.0, 38.4],
             }
         )
         fig_kpi_wait = px.bar(
             df_kpi_wait,
             x="Guest Type",
-            y="Baseline Waiting Time (min)",
+            y="Baseline Waiting Time",
             title="KPI 2: Target In-house Waiting Time Baseline",
-            text="Baseline Waiting Time (min)",
+            text="Baseline Waiting Time",
             color_discrete_sequence=["#0070C0"],
         )
         fig_kpi_wait.update_traces(
